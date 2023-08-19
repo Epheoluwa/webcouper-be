@@ -6,7 +6,7 @@ Full-Stack assessment task for webcoupers.
 
 ### `Live project`
 
-[Click to view the live project](https://webcouper-fe.netlify.app/) <br>
+[Click to visit the fullstack live project](https://zipagro.a10staffing.com/) <br>
 
 ## Available Endpoints
 The following endpoints are available to use from a SPA and also the pages are available to use on the live site
