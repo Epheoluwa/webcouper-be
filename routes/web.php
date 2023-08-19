@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profile', [FrontendController::class, 'profile'])->name('profile');
     Route::get('allusers', [FrontendController::class, 'allusers'])->name('allusers');
     Route::get('/fetchrecipes', [FrontendController::class, 'fetchrecipes'])->name('fetchrecipes');
+    Route::get('/fetchresturants', [FrontendController::class, 'searchResturants'])->name('fetchresturants');
     Route::get('logout', [FEauthController::class, 'logout'])->name('logout');
     Route::get('deactivate', [FEauthController::class, 'deactivate'])->name('deactivate');
 });

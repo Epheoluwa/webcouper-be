@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Recipe;
+use App\Models\Restuarant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use GuzzleHttp\Client;
 
 class FrontendController extends Controller
 {
@@ -42,7 +44,8 @@ class FrontendController extends Controller
 
     public function resturants()
     {
-        return view('resturants');
+        $restaurants = [];
+        return view('resturants', compact('restaurants'));
     }
 
     public function profile()
@@ -103,35 +106,40 @@ class FrontendController extends Controller
             return view('recipe', compact('searchparams', 'query'));
         }
     }
-    // public function fetchrecipes()
-    // {
-    //     $curl = curl_init();
-    //     $recipe_Key = env('EDAMANN_APIKEY');
 
-    //     curl_setopt_array($curl, [
-    //         CURLOPT_URL => "https://edamam-food-and-grocery-database.p.rapidapi.com/api/food-database/v2/parser?ingr=rice",
-    //         CURLOPT_RETURNTRANSFER => true,
-    //         CURLOPT_ENCODING => "",
-    //         CURLOPT_MAXREDIRS => 10,
-    //         CURLOPT_TIMEOUT => 30,
-    //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    //         CURLOPT_CUSTOMREQUEST => "GET",
-    //         CURLOPT_HTTPHEADER => [
-    //             "X-RapidAPI-Host: edamam-food-and-grocery-database.p.rapidapi.com",
-    //             "X-RapidAPI-Key: $recipe_Key",
-    //         ],
-    //     ]);
+    public function searchResturants(Request $request)
+    {
+        $apiKey = getenv('GOOGLE_PLACES_API_KEY');
+        $query = $request->input('search');
+        $validator = Validator::make($request->all(), [
+            'search' => 'required|string',
+        ]);
 
-    //     $response = curl_exec($curl);
-    //     $err = curl_error($curl);
+        if ($validator->fails()) {
+            return back()->with('error', $validator->errors()->first());
+        }
+        $data = [
+            'queryParams' => $query,
+            'name' => Auth::user()->username
+        ];
+        Restuarant::create($data);
+        
+        $client = new Client();
+        try {
+            $response = $client->get("https://maps.googleapis.com/maps/api/place/textsearch/json", [
+                'query' => [
+                    'key' => $apiKey,
+                    'query' => $query,
+                ]
+            ]);
+         
+            $restaurants = json_decode($response->getBody())->results;
 
-    //     curl_close($curl);
-    //     $main_response = json_decode($response);
-    //     if ($err) {
-    //         echo "cURL Error #:" . $err;
-    //     } else {
-    //         print_r( $main_response->hints);
-    //         echo gettype($main_response);
-    //     }
-    // }
+        } catch (\Throwable $e) {
+            echo $e->getMessage();
+        }
+        
+        return view('resturants', compact('restaurants'));
+    }
+
 }
